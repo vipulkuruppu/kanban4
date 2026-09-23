@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "anthropic-cybersecurity-skills": {
+      "source": "reason-machines/security-skills",
+      "sourceType": "github",
+      "skillPath": "skills/anthropic-cybersecurity-skills/SKILL.md",
+      "computedHash": "4e568bb6856c4e960f1935a18cba25befcc0d8a84687804773306ea7c5b67d95"
+    },
+    "cybersecurity-analyst": {
+      "source": "rysweet/amplihack",
+      "sourceType": "github",
+      "skillPath": "skills/cybersecurity-analyst/SKILL.md",
+      "computedHash": "4f804565a002629ad80e311b460d710783af11bfddda5ddecee18c4b8f54cc0e"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "89496d5dd00f4810205f351759594fc2742bf8eea85a2f2b2d1de59f4bd91576"
+    }
+  }
+}
