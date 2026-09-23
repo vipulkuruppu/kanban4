@@ -2,7 +2,9 @@
 
 A single-page Kanban board for tracking IT project tasks across four columns: Backlog, In Progress, Blocked and Done. It is plain HTML, CSS and JavaScript in one file, with no build step or dependencies. Tasks are held in memory only, so reloading the page resets the board to its sample data.
 
-**Live demo:** https://vipulkuruppu.github.io/kanban4/
+**Live demo:** <https://vipulkuruppu.github.io/kanban4/>
+
+![Project board screenshot](docs/screenshot.png)
 
 ## Features
 
@@ -42,8 +44,9 @@ The site is deployed to GitHub Pages by the workflow in [`.github/workflows/page
 
 ## Project structure
 
-```
+```text
 index.html                    # the entire app: CSS, markup and JavaScript
+docs/screenshot.png           # README screenshot
 .github/workflows/pages.yml   # GitHub Pages deployment
 CLAUDE.md                     # notes for Claude Code
 .claude/commands/publish.md   # /publish command for Claude Code

@@ -1,7 +1,7 @@
 ---
 description: Security-scan the project, update the README and GitHub About section, set up GitHub Pages via Actions, and push to a GitHub repo
 argument-hint: <owner/repo | https://github.com/owner/repo | git@github.com:owner/repo.git> [branch]
-allowed-tools: Bash(git:*), Bash(gh:*), Bash(grep:*), Bash(ls:*), Bash(cat:*), Bash(which:*), Bash(command -v:*), Bash(gitleaks:*), Read, Write, Edit, Glob, Grep
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(grep:*), Bash(ls:*), Bash(cat:*), Bash(which:*), Bash(command -v:*), Bash(gitleaks:*), Bash(python3 -m http.server:*), Bash(kill:*), Bash(mkdir:*), Bash(npm:*), Bash(node:*), mcp__playwright, Read, Write, Edit, Glob, Grep
 ---
 
 # Publish this project to GitHub
@@ -42,7 +42,18 @@ Read `index.html` and `CLAUDE.md` so the README describes the project as it actu
 
 Don't invent features, badges or licences that aren't there.
 
-## 4. GitHub Pages workflow
+## 4. Screenshot
+
+Capture the board with the Playwright MCP server (`mcp__playwright__*` tools, configured in `.mcp.json`) and show it in the README.
+
+1. If the Playwright tools aren't available, tell the user the server failed to connect (`/mcp` shows its status; it needs Node 18 or newer). Then fall back to the Playwright library directly. In the scratchpad, install `playwright-core` with Node 18+ first on `PATH` (for example `~/.nvm/versions/node/*/bin`), and use a short script that launches `chromium.launch({ channel: "chrome" })`, which uses installed Google Chrome. Playwright's bundled Chromium doesn't install on macOS 12. Follow steps 2–6 the same way. If neither route works, ask whether to continue without a new screenshot.
+2. Serve the working copy so the screenshot matches what is about to be pushed. Start `python3 -m http.server 8765` in the background and open `http://localhost:8765/index.html`. Don't use `file://` URLs, which Playwright MCP may block.
+3. Use a 1440×900 viewport, wait until the `.card` elements have rendered, and take a full-page screenshot. Don't open the Add Task form or submit anything, because a submission sends a real FormSubmit email.
+4. Save it as `docs/screenshot.png`, replacing any older one, and stop the HTTP server and close the browser afterwards.
+5. Look at the image to check it shows the populated board, not a blank or half-loaded page. It will be published, so also check it shows only sample data, with no personal details.
+6. In the README, put `![Project board screenshot](docs/screenshot.png)` directly under the live demo link, or update the existing image line.
+
+## 5. GitHub Pages workflow
 
 Create or update `.github/workflows/pages.yml`:
 
@@ -86,13 +97,13 @@ jobs:
 
 Only publish the site files, not `CLAUDE.md`, `.claude/` or other repo files. If more static assets are added later, copy them into `_site` as well.
 
-## 5. Commit and push
+## 6. Commit and push
 
 1. Show the user `git status` and `git diff --stat`, then stage the files by name. Don't use `git add -A`.
 2. Commit with a clear message.
 3. Set or confirm `origin` (step 1.3) and run `git push -u origin <branch>`. Never force-push without explicit permission.
 
-## 6. Enable Pages and set the About section
+## 7. Enable Pages and set the About section
 
 1. Switch Pages to build from Actions:
    `gh api -X POST repos/<owner>/<repo>/pages -f build_type=workflow`
@@ -101,11 +112,11 @@ Only publish the site files, not `CLAUDE.md`, `.claude/` or other repo files. If
    `gh repo edit <owner>/<repo> --description "..." --homepage "https://<owner>.github.io/<repo>/" --add-topic kanban --add-topic html --add-topic javascript --add-topic github-pages`
 3. Check the workflow run with `gh run list --workflow=pages.yml --limit 1`, and use `gh run watch` if it's still running.
 
-## 7. Report
+## 8. Report
 
 Finish with a short summary covering:
 - The security scan result and anything the user accepted
-- The files created or changed
+- The files created or changed, and whether the screenshot was refreshed
 - The commit SHA and branch pushed
 - The About description, homepage and topics set
 - The Pages URL and the workflow run status
