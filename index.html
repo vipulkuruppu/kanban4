@@ -3,34 +3,57 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Security headers (delivered as meta tags because GitHub Pages cannot set HTTP headers).
+  The CSP limits outbound requests to FormSubmit (connect-src) and Google Fonts, blocks
+  plugins, <base> hijacking and native form posts. Scripts stay inline (single-file app),
+  so script-src needs 'unsafe-inline'; escapeHtml() remains the primary XSS control.
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://formsubmit.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;650;700;750;800&display=swap">
 <title>UOB IT PMO — Project Board (Demo)</title>
 <style>
 /* =========================================================
    1. Design tokens (palette + spacing scale)
+   Green carries the brand and "on track"; red is kept for
+   urgency (Critical, Blocked, Overdue, destructive actions).
    ========================================================= */
 :root {
-  --blue-900: #0b2a5b;
-  --blue-800: #0f3a7a;
-  --blue-700: #1450a3;
-  --blue-500: #2f6fd1;
-  --blue-100: #e6eefb;
-  --blue-50:  #f3f7fd;
+  --pine-900: #0c3324;
+  --pine-800: #124a34;
+  --pine-700: #17744a;
+  --pine-500: #2f9463;
+  --pine-300: #9fd3b5;
+  --pine-100: #dcefe3;
+  --pine-50:  #f1f8f3;
 
-  --ink:      #1b2433;
-  --ink-soft: #4a5568;
-  --ink-mute: #6b7686;
-  --line:     #d7dee8;
+  --red-800: #8c1d16;
+  --red-700: #b3261e;
+  --red-300: #f4b3a8;
+  --red-100: #fbe5e1;
+
+  --ink:      #15231c;
+  --ink-soft: #3e5047;
+  --ink-mute: #5f7168;
+  --line:     #d2e0d7;
   --surface:  #ffffff;
-  --canvas:   #eef2f7;
+  --canvas:   #e9f1ec;
 
-  --red:        #c62828;
-  --red-soft:   #fdecec;
-  --amber:      #d98a00;
-  --amber-soft: #fff4dc;
-  --grey:       #8a94a3;
-  --grey-soft:  #eef0f3;
-  --green:      #1e7d4a;
-  --green-soft: #e5f5ec;
+  /* Chart + priority colors (validated for colorblind separation) */
+  --prio-critical: #b3261e;
+  --prio-high:     #f4917f;
+  --prio-medium:   #17744a;
+  --prio-low:      #6cc890;
+
+  --proj-1: #17744a;
+  --proj-2: #f5907f;
+  --proj-3: #cf3a2e;
+  --proj-4: #6cc890;
+  --proj-5: #a3241b;
+  --proj-6: #3aa56a;
 
   --focus: #ffb000;
 
@@ -41,12 +64,16 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
 
-  --radius: 8px;
-  --radius-sm: 4px;
-  --shadow: 0 1px 2px rgba(11, 42, 91, 0.08), 0 2px 6px rgba(11, 42, 91, 0.06);
-  --shadow-lg: 0 10px 30px rgba(11, 42, 91, 0.25);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius:    16px;
+  --radius-sm: 10px;
+  --radius-pill: 999px;
 
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --shadow: 0 1px 2px rgba(12, 51, 36, 0.06), 0 4px 14px rgba(12, 51, 36, 0.06);
+  --shadow-lg: 0 18px 48px rgba(12, 51, 36, 0.28);
+
+  --font: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 /* =========================================================
@@ -58,9 +85,10 @@ body {
   margin: 0;
   font-family: var(--font);
   font-size: 15px;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--ink);
   background: var(--canvas);
+  font-variant-numeric: tabular-nums;
 }
 
 h1, h2, h3 { margin: 0; }
@@ -86,30 +114,30 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-4);
-  font-weight: 600;
+  gap: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-5);
+  font-weight: 650;
   cursor: pointer;
   background: var(--surface);
-  color: var(--blue-800);
-  border-color: var(--line);
+  color: var(--pine-800);
 }
-.btn:hover { background: var(--blue-50); }
-.btn-primary { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
-.btn-primary:hover { background: var(--blue-800); }
-.btn-primary:disabled { background: var(--grey); border-color: var(--grey); cursor: progress; }
-.btn-light { background: #fff; color: var(--blue-900); border-color: #fff; }
-.btn-light:hover { background: var(--blue-100); }
+.btn:hover { background: var(--pine-50); }
+.btn-primary { background: var(--pine-700); color: #fff; border-color: var(--pine-700); }
+.btn-primary:hover { background: var(--pine-800); }
+.btn-primary:disabled { background: var(--ink-mute); border-color: var(--ink-mute); cursor: progress; }
+.btn-light { background: #fff; color: var(--pine-900); border-color: #fff; }
+.btn-light:hover { background: var(--pine-100); }
 
 /* =========================================================
    3. Header + summary strip
    ========================================================= */
 .site-header {
-  background: linear-gradient(135deg, var(--blue-900), var(--blue-700));
+  background: var(--pine-900);
   color: #fff;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
 }
 .header-top {
   display: flex;
@@ -118,40 +146,42 @@ button, input, select, textarea { font: inherit; color: inherit; }
   justify-content: space-between;
   gap: var(--space-4);
 }
-.brand { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.brand { display: flex; flex-direction: column; gap: 2px; }
 .wordmark {
-  font-size: 1.35rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
-.brand-sub { font-size: 0.95rem; opacity: 0.85; }
+.brand-sub { font-size: 0.95rem; color: var(--pine-300); }
 
 .summary {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin: var(--space-4) 0 var(--space-2);
+  margin: var(--space-4) 0 var(--space-3);
   padding: 0;
 }
 .summary div {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-sm);
-  padding: var(--space-1) var(--space-3);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-pill);
+  padding: var(--space-1) var(--space-4);
   display: flex;
   gap: var(--space-2);
   align-items: baseline;
 }
-.summary dt { font-size: 0.8rem; opacity: 0.85; }
-.summary dd { margin: 0; font-weight: 700; font-size: 1.05rem; }
-.summary .summary-overdue { background: rgba(198, 40, 40, 0.35); border-color: rgba(255, 180, 180, 0.5); }
+.summary dt { font-size: 0.82rem; color: var(--pine-300); }
+.summary dd { margin: 0; font-weight: 750; font-size: 1.05rem; }
+.summary .summary-overdue { background: var(--red-700); border-color: var(--red-700); }
+.summary .summary-overdue dt { color: var(--red-100); }
 
-.demo-note { margin: 0; font-size: 0.8rem; opacity: 0.8; }
+.demo-note { margin: 0; font-size: 0.8rem; color: var(--pine-300); }
 
 /* =========================================================
    4. Filter bar
    ========================================================= */
-main { padding: var(--space-4) var(--space-5) var(--space-6); }
+main { padding: var(--space-5) var(--space-5) var(--space-6); }
 
 .filters {
   display: flex;
@@ -160,22 +190,103 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
   gap: var(--space-3);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4) var(--space-4);
   margin-bottom: var(--space-4);
   box-shadow: var(--shadow);
 }
 .filters .field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 10rem; flex: 1 1 10rem; }
-.filters label { font-size: 0.8rem; font-weight: 600; color: var(--ink-soft); }
+.filters label { font-size: 0.8rem; font-weight: 650; color: var(--ink-soft); padding-left: var(--space-2); }
 .filters input, .filters select {
-  padding: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: #fff;
 }
 
 /* =========================================================
-   5. Board + columns
+   5. Insights: donut charts by project and priority
+   ========================================================= */
+.insights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  box-shadow: var(--shadow);
+}
+.chart-head { margin-bottom: var(--space-3); }
+.chart-head h2 { font-size: 1.05rem; color: var(--pine-900); }
+.chart-scope { margin: 2px 0 0; font-size: 0.82rem; color: var(--ink-mute); }
+
+.chart-body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+.donut {
+  position: relative;
+  flex: 0 0 auto;
+  width: 164px;
+  height: 164px;
+}
+.donut svg { display: block; width: 100%; height: 100%; }
+.donut .track { fill: none; stroke: var(--pine-50); stroke-width: 18; }
+.donut .slice { fill: none; stroke-width: 18; transition: opacity 160ms ease; }
+.donut .slice.dimmed { opacity: 0.22; }
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 34px;
+  pointer-events: none;
+}
+.donut-value { font-size: 2rem; font-weight: 800; line-height: 1; color: var(--pine-900); letter-spacing: -0.02em; }
+.donut-label { margin-top: 4px; font-size: 0.72rem; line-height: 1.2; color: var(--ink-mute); }
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 24rem;
+  display: grid;
+  gap: 2px;
+}
+.legend-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto 3.2rem;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.86rem;
+}
+.legend-item:hover { background: var(--pine-50); }
+.legend-item[aria-pressed="true"] { background: var(--pine-100); border-color: var(--pine-300); font-weight: 650; }
+.legend-item.is-empty { color: var(--ink-mute); }
+.swatch { width: 12px; height: 12px; border-radius: 4px; }
+.legend-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.legend-count { color: var(--ink-mute); }
+.legend-pct { font-weight: 700; text-align: right; }
+
+/* =========================================================
+   6. Board + columns
    ========================================================= */
 .board {
   display: grid;
@@ -184,37 +295,49 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
   align-items: start;
 }
 .column {
-  background: var(--blue-50);
+  background: var(--pine-50);
   border: 2px solid transparent;
-  border-radius: var(--radius);
-  padding: var(--space-3);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-3) var(--space-3);
   min-height: 12rem;
   transition: background-color 120ms, border-color 120ms;
 }
 .column.drop-target {
-  background: var(--blue-100);
-  border: 2px dashed var(--blue-500);
+  background: var(--pine-100);
+  border: 2px dashed var(--pine-500);
 }
 .column-header {
+  --status: var(--pine-500);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 3px solid var(--blue-700);
+  margin: 0 var(--space-2) var(--space-3);
 }
-.column[data-status="Blocked"] .column-header { border-bottom-color: var(--red); }
-.column[data-status="Done"] .column-header { border-bottom-color: var(--green); }
-.column[data-status="Backlog"] .column-header { border-bottom-color: var(--grey); }
-.column-header h2 { font-size: 1rem; color: var(--blue-900); }
+.column[data-status="Backlog"] .column-header { --status: var(--ink-mute); }
+.column[data-status="Blocked"] .column-header { --status: var(--red-700); }
+.column[data-status="Done"] .column-header { --status: var(--pine-800); }
+.column-header h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1rem;
+  color: var(--pine-900);
+}
+.column-header h2::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--status);
+}
 .count-badge {
-  background: var(--blue-900);
+  background: var(--status);
   color: #fff;
   font-size: 0.8rem;
   font-weight: 700;
-  border-radius: 999px;
-  padding: 0 var(--space-2);
-  min-width: 1.75rem;
+  border-radius: var(--radius-pill);
+  padding: 1px var(--space-2);
+  min-width: 1.9rem;
   text-align: center;
 }
 .card-list {
@@ -232,26 +355,26 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
   text-align: center;
   padding: var(--space-4) 0;
   border: 1px dashed var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
 }
 
 /* =========================================================
-   6. Cards
+   7. Cards
    ========================================================= */
 .card {
+  --prio: var(--prio-low);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-left: 5px solid var(--grey);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
-  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4) var(--space-3) calc(var(--space-4) + 4px);
+  box-shadow: inset 5px 0 0 var(--prio), var(--shadow);
   cursor: grab;
 }
 .card.dragging { opacity: 0.5; }
-.card.prio-critical { border-left-color: var(--red); }
-.card.prio-high     { border-left-color: var(--amber); }
-.card.prio-medium   { border-left-color: var(--blue-500); }
-.card.prio-low      { border-left-color: var(--grey); }
+.card.prio-critical { --prio: var(--prio-critical); }
+.card.prio-high     { --prio: var(--prio-high); }
+.card.prio-medium   { --prio: var(--prio-medium); }
+.card.prio-low      { --prio: var(--prio-low); }
 
 .card-top {
   display: flex;
@@ -259,8 +382,8 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
   align-items: center;
   gap: var(--space-2);
 }
-.task-id { font-size: 0.75rem; font-weight: 700; color: var(--blue-700); font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
-.card-title { font-size: 0.95rem; font-weight: 650; margin: var(--space-1) 0 var(--space-2); word-break: break-word; }
+.task-id { font-size: 0.75rem; font-weight: 700; color: var(--pine-700); letter-spacing: 0.02em; }
+.card-title { font-size: 0.97rem; font-weight: 700; line-height: 1.3; margin: var(--space-1) 0 var(--space-2); word-break: break-word; }
 .card-meta { margin: 0; padding: 0; list-style: none; font-size: 0.82rem; color: var(--ink-soft); display: grid; gap: 2px; }
 .card-meta .label { color: var(--ink-mute); }
 .card-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
@@ -269,17 +392,17 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
   display: inline-block;
   font-size: 0.72rem;
   font-weight: 700;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 1px var(--space-2);
   border: 1px solid transparent;
 }
-.pill-critical { background: var(--red-soft);   color: var(--red);      border-color: var(--red); }
-.pill-high     { background: var(--amber-soft); color: #8a5800;         border-color: var(--amber); }
-.pill-medium   { background: var(--blue-100);   color: var(--blue-800); border-color: var(--blue-500); }
-.pill-low      { background: var(--grey-soft);  color: var(--ink-soft); border-color: var(--grey); }
-.tag { background: var(--grey-soft); color: var(--ink-soft); font-weight: 600; border-radius: var(--radius-sm); }
-.badge-overdue { background: var(--red-soft); color: var(--red); border-color: rgba(198, 40, 40, 0.35); }
-.due-overdue { color: var(--red); font-weight: 600; }
+.pill-critical { background: var(--red-700);  color: #fff;             border-color: var(--red-700); }
+.pill-high     { background: var(--red-100);  color: var(--red-800);   border-color: var(--red-300); }
+.pill-medium   { background: var(--pine-100); color: var(--pine-800);  border-color: var(--pine-300); }
+.pill-low      { background: var(--pine-50);  color: var(--ink-soft);  border-color: var(--line); }
+.tag { background: var(--pine-50); color: var(--ink-soft); font-weight: 600; }
+.badge-overdue { background: var(--red-100); color: var(--red-800); border-color: var(--red-300); }
+.due-overdue { color: var(--red-700); font-weight: 650; }
 
 .card-actions {
   display: flex;
@@ -289,20 +412,20 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
   gap: var(--space-2);
   margin-top: var(--space-3);
   padding-top: var(--space-2);
-  border-top: 1px solid var(--grey-soft);
+  border-top: 1px solid var(--pine-50);
 }
 .icon-btn, .link-btn {
   border: 1px solid var(--line);
   background: #fff;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   cursor: pointer;
   font-size: 0.8rem;
-  padding: 2px var(--space-2);
-  color: var(--blue-800);
+  padding: 2px var(--space-3);
+  color: var(--pine-800);
 }
-.icon-btn:hover, .link-btn:hover { background: var(--blue-50); }
-.delete-btn { font-size: 1.05rem; line-height: 1; color: var(--ink-mute); padding: 2px var(--space-2); }
-.delete-btn:hover { color: var(--red); background: var(--red-soft); }
+.icon-btn:hover, .link-btn:hover { background: var(--pine-50); }
+.delete-btn { font-size: 1.05rem; line-height: 1; color: var(--ink-mute); padding: 3px var(--space-2); }
+.delete-btn:hover { color: var(--red-700); background: var(--red-100); }
 
 .move-menu {
   display: flex;
@@ -320,19 +443,19 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
   align-items: center;
   gap: var(--space-2);
   font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--red);
+  font-weight: 650;
+  color: var(--red-700);
 }
-.delete-confirm .yes { background: var(--red); color: #fff; border-color: var(--red); }
-.delete-confirm .yes:hover { background: #a31f1f; }
+.delete-confirm .yes { background: var(--red-700); color: #fff; border-color: var(--red-700); }
+.delete-confirm .yes:hover { background: var(--red-800); }
 
 /* =========================================================
-   7. Modal + form
+   8. Modal + form
    ========================================================= */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(11, 42, 91, 0.45);
+  background: rgba(12, 51, 36, 0.5);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -343,7 +466,7 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
 .modal-backdrop[hidden] { display: none; }
 .modal {
   background: var(--surface);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   width: 100%;
   max-width: 40rem;
@@ -355,7 +478,7 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--line);
 }
-.modal-head h2 { font-size: 1.15rem; color: var(--blue-900); }
+.modal-head h2 { font-size: 1.2rem; color: var(--pine-900); }
 .task-form { padding: var(--space-4) var(--space-5) var(--space-5); }
 .form-grid {
   display: grid;
@@ -364,18 +487,18 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
 }
 .form-grid .full { grid-column: 1 / -1; }
 .form-field { display: flex; flex-direction: column; gap: var(--space-1); }
-.form-field label { font-weight: 600; font-size: 0.85rem; color: var(--ink-soft); }
-.form-field .req { color: var(--red); }
+.form-field label { font-weight: 650; font-size: 0.85rem; color: var(--ink-soft); }
+.form-field .req { color: var(--red-700); }
 .form-field input, .form-field select, .form-field textarea {
-  padding: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: #fff;
 }
 .form-field textarea { resize: vertical; min-height: 5rem; }
-.form-field [aria-invalid="true"] { border-color: var(--red); background: var(--red-soft); }
-.field-error { margin: 0; min-height: 1em; font-size: 0.78rem; color: var(--red); }
-.field-hint { font-size: 0.75rem; color: var(--ink-mute); }
+.form-field [aria-invalid="true"] { border-color: var(--red-700); background: var(--red-100); }
+.field-error { margin: 0; min-height: 1em; font-size: 0.78rem; color: var(--red-700); }
+.field-hint { font-size: 0.75rem; font-weight: 400; color: var(--ink-mute); }
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -384,7 +507,7 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
 }
 
 /* =========================================================
-   8. Toasts
+   9. Toasts
    ========================================================= */
 .toasts {
   position: fixed;
@@ -397,29 +520,37 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
   max-width: min(24rem, calc(100vw - 2rem));
 }
 .toast {
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-lg);
-  font-weight: 600;
+  padding: var(--space-3) var(--space-4) var(--space-3) calc(var(--space-4) + 4px);
+  border-radius: var(--radius);
+  box-shadow: inset 5px 0 0 var(--tone), var(--shadow-lg);
+  font-weight: 650;
   font-size: 0.9rem;
-  border-left: 5px solid;
   background: #fff;
 }
-.toast-success { border-left-color: var(--green); color: var(--green); }
-.toast-warning { border-left-color: var(--amber); color: #7a4e00; background: var(--amber-soft); }
-.toast-info    { border-left-color: var(--blue-500); color: var(--blue-800); }
+.toast-success { --tone: var(--pine-700); color: var(--pine-800); }
+.toast-warning { --tone: var(--red-700);  color: var(--red-800); background: var(--red-100); }
+.toast-info    { --tone: var(--pine-500); color: var(--ink); }
 
 /* =========================================================
-   9. Responsive
+   10. Responsive + motion
    ========================================================= */
 @media (max-width: 1100px) and (min-width: 768px) {
   .board { gap: var(--space-2); }
   main { padding-left: var(--space-3); padding-right: var(--space-3); }
+  .chart-body { flex-direction: column; align-items: stretch; }
+  .donut { align-self: center; }
 }
 @media (max-width: 767px) {
-  .board { grid-template-columns: 1fr; }
+  .board, .insights { grid-template-columns: 1fr; }
   .site-header, main { padding-left: var(--space-3); padding-right: var(--space-3); }
+  .site-header { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
   .form-grid { grid-template-columns: 1fr; }
+  .chart-card { padding: var(--space-4); }
+  .chart-body { flex-direction: column; align-items: stretch; }
+  .donut { align-self: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
 }
 </style>
 </head>
@@ -432,7 +563,7 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
   <div class="header-top">
     <div class="brand">
       <span class="wordmark">UOB IT PMO</span>
-      <span class="brand-sub">IT Project Board · internal demo</span>
+      <span class="brand-sub">IT project board, internal demo</span>
     </div>
     <button type="button" class="btn btn-light" id="open-add-task" aria-haspopup="dialog">
       <span aria-hidden="true">+</span> Add Task
@@ -473,6 +604,46 @@ main { padding: var(--space-4) var(--space-5) var(--space-6); }
     </div>
     <button type="reset" class="btn" id="clear-filters">Clear filters</button>
   </form>
+
+  <!-- =========================================================
+       Insights: share of tasks by project and by priority.
+       Each chart applies every filter except its own, and highlights
+       the selected slice. Legend rows are buttons that set that filter.
+       ========================================================= -->
+  <section class="insights" id="insights" aria-label="Task breakdown">
+    <article class="chart-card" aria-labelledby="chart-title-project">
+      <div class="chart-head">
+        <h2 id="chart-title-project">Tasks by project</h2>
+        <p class="chart-scope" id="scope-project"></p>
+      </div>
+      <div class="chart-body">
+        <div class="donut">
+          <svg viewBox="0 0 120 120" id="donut-project" aria-hidden="true" focusable="false"></svg>
+          <div class="donut-center" aria-hidden="true">
+            <span class="donut-value" id="center-value-project"></span>
+            <span class="donut-label" id="center-label-project"></span>
+          </div>
+        </div>
+        <ul class="legend" id="legend-project" aria-label="Filter by project"></ul>
+      </div>
+    </article>
+    <article class="chart-card" aria-labelledby="chart-title-priority">
+      <div class="chart-head">
+        <h2 id="chart-title-priority">Tasks by priority</h2>
+        <p class="chart-scope" id="scope-priority"></p>
+      </div>
+      <div class="chart-body">
+        <div class="donut">
+          <svg viewBox="0 0 120 120" id="donut-priority" aria-hidden="true" focusable="false"></svg>
+          <div class="donut-center" aria-hidden="true">
+            <span class="donut-value" id="center-value-priority"></span>
+            <span class="donut-label" id="center-label-priority"></span>
+          </div>
+        </div>
+        <ul class="legend" id="legend-priority" aria-label="Filter by priority"></ul>
+      </div>
+    </article>
+  </section>
 
   <!-- =========================================================
        Kanban board (columns are filled by renderBoard())
@@ -609,6 +780,12 @@ const CATEGORIES = ["Application Development", "Infrastructure", "Cybersecurity"
 const PRIORITIES = ["Critical", "High", "Medium", "Low"];
 const TOAST_MS   = 4500;
 
+// Donut charts: which values each one breaks down, and their color tokens.
+const CHARTS = {
+  project:  { values: PROJECTS,   colors: PROJECTS.map((_, i) => `var(--proj-${i + 1})`) },
+  priority: { values: PRIORITIES, colors: PRIORITIES.map((p) => `var(--prio-${p.toLowerCase()})`) },
+};
+
 /* =========================================================
    State: the single source of truth (in memory only)
    ========================================================= */
@@ -716,6 +893,70 @@ function renderBoard() {
   });
 
   renderSummary();
+  Object.keys(CHARTS).forEach(renderDonut);
+}
+
+function percent(n, total) {
+  return total ? `${Math.round((n / total) * 100)}%` : "0%";
+}
+
+// Describes the filters a chart applies (all except its own dimension).
+function chartScope(key) {
+  const { project, assignee, priority } = state.filters;
+  const parts = [];
+  if (key !== "project" && project) parts.push(project);
+  if (key !== "priority" && priority) parts.push(`${priority} priority`);
+  if (assignee.trim()) parts.push(`assignee contains “${assignee.trim()}”`);
+  return parts.length ? `Within: ${parts.join(", ")}` : "All tasks on the board";
+}
+
+function renderDonut(key) {
+  const { values, colors } = CHARTS[key];
+  const tasks = tasksMatching(key);
+  const total = tasks.length;
+  const selected = state.filters[key];
+  const counts = values.map((v) => tasks.filter((t) => t[key] === v).length);
+
+  // Each slice is a stroked circle; dash length = its share of the circumference.
+  const R = 48, C = 2 * Math.PI * R, GAP = 2;
+  const multi = counts.filter(Boolean).length > 1;
+  let offset = 0;
+  const arcs = counts.map((n, i) => {
+    if (!n) return "";
+    const len = (n / total) * C;
+    const dash = multi ? Math.max(len - GAP, 0.5) : C;
+    const dim = selected && selected !== values[i] ? " dimmed" : "";
+    const arc = `<circle class="slice${dim}" cx="60" cy="60" r="${R}" style="stroke:${colors[i]}"
+      stroke-dasharray="${dash.toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}">
+      <title>${escapeHtml(values[i])}: ${n} of ${total} (${percent(n, total)})</title></circle>`;
+    offset += len;
+    return arc;
+  }).join("");
+  document.getElementById(`donut-${key}`).innerHTML =
+    `<circle class="track" cx="60" cy="60" r="${R}"></circle><g transform="rotate(-90 60 60)">${arcs}</g>`;
+
+  const valueEl = document.getElementById(`center-value-${key}`);
+  const labelEl = document.getElementById(`center-label-${key}`);
+  if (selected) {
+    valueEl.textContent = percent(counts[values.indexOf(selected)], total);
+    labelEl.textContent = selected;
+  } else {
+    valueEl.textContent = String(total);
+    labelEl.textContent = total === 1 ? "task" : "tasks";
+  }
+
+  document.getElementById(`scope-${key}`).textContent = chartScope(key);
+  document.getElementById(`legend-${key}`).innerHTML = values.map((v, i) => {
+    const pressed = selected === v;
+    return `<li><button type="button" class="legend-item${counts[i] ? "" : " is-empty"}"
+        data-chart-filter="${key}" data-value="${escapeHtml(v)}" aria-pressed="${pressed}"
+        aria-label="${escapeHtml(v)}: ${counts[i]} task${counts[i] === 1 ? "" : "s"}, ${percent(counts[i], total)}">
+      <span class="swatch" style="background:${colors[i]}"></span>
+      <span class="legend-name">${escapeHtml(v)}</span>
+      <span class="legend-count">${counts[i]}</span>
+      <span class="legend-pct">${percent(counts[i], total)}</span>
+    </button></li>`;
+  }).join("");
 }
 
 function renderCard(task) {
@@ -809,11 +1050,17 @@ function deleteTask(id) {
 
 // Pure: returns the tasks that match the current filters.
 function applyFilters() {
+  return tasksMatching(null);
+}
+
+// Pure: like applyFilters(), but ignores the filter named by `skip`
+// (used by the charts, which break down their own dimension).
+function tasksMatching(skip) {
   const { project, assignee, priority } = state.filters;
   const needle = assignee.trim().toLowerCase();
   return state.tasks.filter((t) =>
-    (!project || t.project === project) &&
-    (!priority || t.priority === priority) &&
+    (skip === "project" || !project || t.project === project) &&
+    (skip === "priority" || !priority || t.priority === priority) &&
     (!needle || t.assignee.toLowerCase().includes(needle))
   );
 }
@@ -1099,6 +1346,20 @@ function wireFilters() {
   filterForm.addEventListener("submit", (e) => e.preventDefault());
 }
 
+// Legend rows toggle the matching filter; the value is checked against the whitelist.
+function handleChartClick(event) {
+  const btn = event.target.closest("button[data-chart-filter]");
+  if (!btn) return;
+  const key = btn.dataset.chartFilter;
+  const value = btn.dataset.value;
+  if (!CHARTS[key] || !CHARTS[key].values.includes(value)) return;
+  const next = state.filters[key] === value ? "" : value;
+  state.filters[key] = next;
+  document.getElementById(`filter-${key}`).value = next;
+  renderBoard();
+  focusAfterRender(`[data-chart-filter="${key}"][data-value="${CSS.escape(value)}"]`);
+}
+
 /* =========================================================
    Init
    ========================================================= */
@@ -1121,6 +1382,7 @@ function init() {
   board.addEventListener("keydown", handleBoardKeydown);
   wireDragAndDrop(board);
   wireFilters();
+  document.getElementById("insights").addEventListener("click", handleChartClick);
 
   form.addEventListener("submit", handleSubmit);
   openBtn.addEventListener("click", openModal);

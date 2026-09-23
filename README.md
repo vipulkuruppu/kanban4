@@ -2,7 +2,7 @@
 
 A single-page Kanban board for tracking IT project tasks across four columns: Backlog, In Progress, Blocked and Done. It is plain HTML, CSS and JavaScript in one file, with no build step or dependencies. Tasks are held in memory only, so reloading the page resets the board to its sample data.
 
-**Live demo:** <https://vipulkuruppu.github.io/kanban4/>
+**Live demo:** <https://vipulkuruppu.github.io/kanban4-v2/>
 
 ![Project board screenshot](docs/screenshot.png)
 
@@ -13,9 +13,12 @@ A single-page Kanban board for tracking IT project tasks across four columns: Ba
 - **Validation.** Required fields, length limits, whitelisted dropdown values and no due dates in the past. Errors are shown next to each field.
 - **Filters** by project, assignee (text match) and priority. Column counts show how many tasks are visible out of the total.
 - **Summary bar** with total, per-status and overdue counts. Overdue cards are highlighted.
+- **Donut charts** of tasks by project and by priority, above the board. Each chart applies the other filters and shows the selected project's or priority's share in its centre. Click a legend row to filter the board, and click it again to clear.
+- **Green and red theme.** Green for the brand and on-track work, red for Critical, Blocked and Overdue. The chart colours are checked for colour-blind separation, and every slice is also labelled with its count and percentage.
 - **Delete with confirmation** inline on each card.
 - **Email notification.** Each new task is sent to a configured address through [FormSubmit](https://formsubmit.co). If sending fails, you see a warning and the board is unaffected.
-- **Accessible.** ARIA labels, per-field error messages, a focus-trapped modal, Escape to close menus and dialogs, and live-region toasts.
+- **Accessible.** ARIA labels, per-field error messages, a focus-trapped modal, Escape to close menus and dialogs, live-region toasts and keyboard-operable chart legends.
+- **Content Security Policy.** A CSP meta tag only allows network requests to FormSubmit and fonts from Google Fonts. It also sets a no-referrer policy.
 
 ## Running locally
 
