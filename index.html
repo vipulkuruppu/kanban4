@@ -506,6 +506,11 @@ main { padding: var(--space-5) var(--space-5) var(--space-6); }
   margin-top: var(--space-4);
 }
 
+.modal-sm { max-width: 26rem; margin-top: 15vh; }
+.modal-body { padding: var(--space-4) var(--space-5) var(--space-5); color: var(--ink); }
+.modal-body p + p { margin-top: var(--space-2); }
+.modal-body a { color: var(--pine-700); font-weight: 650; }
+
 /* =========================================================
    9. Toasts
    ========================================================= */
@@ -753,6 +758,25 @@ main { padding: var(--space-5) var(--space-5) var(--space-6); }
   </div>
 </div>
 
+<!-- =========================================================
+     Welcome dialog (shown once, after 10 seconds on the page)
+     ========================================================= -->
+<div class="modal-backdrop" id="welcome" hidden>
+  <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="welcome-title" aria-describedby="welcome-body">
+    <div class="modal-head">
+      <h2 id="welcome-title">Thank you for visiting</h2>
+      <button type="button" class="icon-btn delete-btn" id="close-welcome" aria-label="Close welcome message">×</button>
+    </div>
+    <div class="modal-body" id="welcome-body">
+      <p>Thank you for visiting the UOB IT PMO portal.</p>
+      <p>If you need further assistance, please call the IT support hotline at <a href="tel:12345678">12345678</a>.</p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" id="ok-welcome">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Toast region (announced politely to screen readers) -->
 <div class="toasts" id="toasts" aria-live="polite" role="status"></div>
 
@@ -779,6 +803,7 @@ const PROJECTS   = ["Core Banking Upgrade", "Digital Channels", "Cybersecurity U
 const CATEGORIES = ["Application Development", "Infrastructure", "Cybersecurity", "Data", "Compliance", "Vendor"];
 const PRIORITIES = ["Critical", "High", "Medium", "Low"];
 const TOAST_MS   = 4500;
+const WELCOME_DELAY_MS = 10000;
 
 // Donut charts: which values each one breaks down, and their color tokens.
 const CHARTS = {
@@ -1218,6 +1243,35 @@ function trapFocus(event) {
 }
 
 /* =========================================================
+   Welcome dialog: shown once per page load after WELCOME_DELAY_MS
+   ========================================================= */
+const welcome = document.getElementById("welcome");
+let welcomeReturnFocus = null;
+
+function openWelcome() {
+  // Don't interrupt someone filling in the Add Task form; retry when it closes.
+  if (!modal.hidden) { setTimeout(openWelcome, 1000); return; }
+  welcomeReturnFocus = document.activeElement;
+  welcome.hidden = false;
+  document.getElementById("ok-welcome").focus();
+}
+
+function closeWelcome() {
+  welcome.hidden = true;
+  if (welcomeReturnFocus && document.contains(welcomeReturnFocus)) welcomeReturnFocus.focus();
+}
+
+function trapWelcomeFocus(event) {
+  if (event.key === "Escape") { closeWelcome(); return; }
+  if (event.key !== "Tab") return;
+  const focusables = welcome.querySelectorAll("button, a[href]");
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+}
+
+/* =========================================================
    Board interactions: card buttons (keyboard-friendly)
    ========================================================= */
 function focusAfterRender(selector) {
@@ -1390,6 +1444,12 @@ function init() {
   document.getElementById("cancel-modal").addEventListener("click", closeModal);
   modal.addEventListener("keydown", trapFocus);
   modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+  document.getElementById("close-welcome").addEventListener("click", closeWelcome);
+  document.getElementById("ok-welcome").addEventListener("click", closeWelcome);
+  welcome.addEventListener("keydown", trapWelcomeFocus);
+  welcome.addEventListener("click", (e) => { if (e.target === welcome) closeWelcome(); });
+  setTimeout(openWelcome, WELCOME_DELAY_MS);
 
   renderBoard();
 }

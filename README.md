@@ -2,7 +2,7 @@
 
 A single-page Kanban board for tracking IT project tasks across four columns: Backlog, In Progress, Blocked and Done. It is plain HTML, CSS and JavaScript in one file, with no build step or dependencies. Tasks are held in memory only, so reloading the page resets the board to its sample data.
 
-**Live demo:** <https://vipulkuruppu.github.io/kanban4-v2/>
+**Live demo:** <https://vipulkuruppu.github.io/kanban4-V3/>
 
 ![Project board screenshot](docs/screenshot.png)
 
@@ -18,6 +18,7 @@ A single-page Kanban board for tracking IT project tasks across four columns: Ba
 - **Delete with confirmation** inline on each card.
 - **Email notification.** Each new task is sent to a configured address through [FormSubmit](https://formsubmit.co). If sending fails, you see a warning and the board is unaffected.
 - **Accessible.** ARIA labels, per-field error messages, a focus-trapped modal, Escape to close menus and dialogs, live-region toasts and keyboard-operable chart legends.
+- **Welcome dialog.** After 10 seconds on the page, a dialog thanks the visitor and gives the IT support hotline (12345678). It appears once per page load and waits if the Add Task form is open. The delay is set by `WELCOME_DELAY_MS`.
 - **Content Security Policy.** A CSP meta tag only allows network requests to FormSubmit and fonts from Google Fonts. It also sets a no-referrer policy.
 
 ## Running locally
